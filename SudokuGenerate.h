@@ -12,14 +12,16 @@ namespace szablon {
         SudokuGenerate();
         void GenerateSudoku();
         bool fillValues();
+        void fillArrays();
         int numberOfSolution;
         int tryGen;
-        bool solveSudoku(bool visualize);
+        bool solveSudoku();
         bool checkSudoku();
         bool hasEmptyCell();
+        void removeDigits(int i);
     private:
         bool CheckIfSafe(int row, int col, int num);
-        void removeDigits(int i);
+        
        
         
        

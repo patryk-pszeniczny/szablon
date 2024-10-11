@@ -11,44 +11,53 @@ namespace szablon {
         rand = gcnew Random();
         listOfTab = gcnew array<TableLayoutPanel^>(9);
         generator = gcnew SudokuGenerate();
+        generator->fillArrays();
         generator->GenerateSudoku();
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                TableLayoutPanel^ tb = dynamic_cast<TableLayoutPanel^>(this->table->GetControlFromPosition(j, i));
-                for (int k = 0; k < 3; k++) {
-                    for (int p = 0; p < 3; p++) {
-                        TextBox^ text = gcnew TextBox();
-                        text->Padding = System::Windows::Forms::Padding(0);
-                        text->Margin = System::Windows::Forms::Padding(0);
-                        text->Width = 57;
-                        text->Height = 57;
-                       
-                        text->AutoSize = false;
-                        text->MaxLength = 1;
-                        text->Font = gcnew System::Drawing::Font(text->Font->FontFamily, 20);
-                        text->TextAlign = HorizontalAlignment::Center;
-                        text->KeyPress += gcnew KeyPressEventHandler(this, &MainForm::TextBox_KeyPress);
-                        int value = generator->board[i * 3 + k, j * 3 + p];
-                        text->Name = L"text_" + (i * 3 + k) + "_" + (j * 3 + p);
-                        int row = i * 3 + k;
-                        int col = j * 3 + p;
-                        text->Tag = gcnew array<int>{row, col};
-                        if (value != 0) {
-                            text->Text = value.ToString();
-                            text->ReadOnly = true;
-                            text->Enabled = false;
-                            text->BackColor = BackColor.Lime;
-                            text->Click += gcnew EventHandler(this, &MainForm::LockedTextBox_Click);
-                        }
+        generator->removeDigits(51);
+        this->CreateTextBoxes();
 
-                        tb->Controls->Add(text, p, k);
+    }
+    void MainForm::CreateTextBoxes() {
+        for (int blockRow = 0; blockRow < 3; blockRow++) {
+            for (int blockCol = 0; blockCol < 3; blockCol++) {
+                TableLayoutPanel^ tb = dynamic_cast<TableLayoutPanel^>(this->table->GetControlFromPosition(blockCol, blockRow));
+                for (int rowOffset = 0; rowOffset < 3; rowOffset++) {
+                    for (int colOffset = 0; colOffset < 3; colOffset++) {
+                        int globalRow = blockRow * 3 + rowOffset;
+                        int globalCol = blockCol * 3 + colOffset;
+                        CreateTextBox(tb, globalRow, globalCol);
                     }
                 }
             }
         }
         label1->Text += generator->numberOfSolution;
         label2->Text += generator->tryGen;
+    }
+    void MainForm::CreateTextBox(TableLayoutPanel^ parentTable, int row, int col) {
+        TextBox^ text = gcnew TextBox();
+        text->Padding = System::Windows::Forms::Padding(0);
+        text->Margin = System::Windows::Forms::Padding(0);
+        text->Width = 57;
+        text->Height = 57;
+        text->AutoSize = false;
+        text->MaxLength = 1;
+        text->Font = gcnew System::Drawing::Font(text->Font->FontFamily, 20);
+        text->TextAlign = HorizontalAlignment::Center;
+        text->KeyPress += gcnew KeyPressEventHandler(this, &MainForm::TextBox_KeyPress);
 
+        int value = generator->board[row, col];
+        text->Name = L"text_" + row + "_" + col;
+        text->Tag = gcnew array<int>{ row, col };
+
+        if (value != 0) {
+            text->Text = value.ToString();
+            text->ReadOnly = true;
+            text->Enabled = false;
+            text->BackColor = BackColor.Lime;
+            text->Click += gcnew EventHandler(this, &MainForm::LockedTextBox_Click);
+        }
+
+        parentTable->Controls->Add(text, col % 3, row % 3);
     }
     void MainForm::printBoard(array<int, 2>^ b) {
         
@@ -61,8 +70,6 @@ namespace szablon {
                 return;
             }
         }
-
-        // Po zatwierdzeniu cyfry aktualizujemy wartoœæ w board
         TextBox^ textBox = dynamic_cast<TextBox^>(sender);
 
         if (textBox != nullptr && e->KeyChar != (char)Keys::Back) {

@@ -24,6 +24,8 @@ namespace szablon {
 		SudokuGenerate^ generator;
 		MainForm(void);
 	private:
+		void CreateTextBoxes();
+		void CreateTextBox(TableLayoutPanel^ parentTable, int row, int col);
 		void printBoard(array<int, 2>^ b);
 		void TextBox_KeyPress(Object^ sender, KeyPressEventArgs^ e);
 		void LockedTextBox_Click(Object^ sender, EventArgs^ e);
@@ -336,39 +338,50 @@ namespace szablon {
 	private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
 		if (this->generator->checkSudoku()) {
 			MessageBox::Show("BRAWO", "Wygra³eœ talon :3");
+			return;
 		}
-		else {
-			MessageBox::Show("Next time braku", ":(");
-		}
+		MessageBox::Show("Next time braku", ":(");
 
 	}
-private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			TableLayoutPanel^ tb = dynamic_cast<TableLayoutPanel^>(this->table->GetControlFromPosition(j, i));
-			for (int k = 0; k < 3; k++) {
-				for (int p = 0; p < 3; p++) {
-					int row = i * 3 + k;
-					int col = j * 3 + p;
-					int value = this->generator->copy_board[row, col];
-					if (value != 0) {
-						TextBox^ text1 = dynamic_cast<TextBox^>(tb->GetControlFromPosition(p, k));
-						if (text1 != nullptr) {
-							text1->BackColor = BackColor.Orange;
-							text1->Text = value.ToString();
-							text1->Enabled = false;
-						}
-						this->generator->board[row, col] = value;
-						this->generator->copy_board[row, col] = 0;
-						return;
-					}
-					}
+	private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
+		for (int blockRow = 0; blockRow < 3; blockRow++) {
+			for (int blockCol = 0; blockCol < 3; blockCol++) {
+				TableLayoutPanel^ tb = dynamic_cast<TableLayoutPanel^>(this->table->GetControlFromPosition(blockCol, blockRow));
+				if (tb != nullptr && ProcessBlock(tb, blockRow, blockCol)) {
+					return;
 				}
 			}
 		}
 	}
-private: System::Void MainForm_Load(System::Object^ sender, System::EventArgs^ e) {
-	std::cout >> "Obecnie all œmiga :P" << endl;
-}
-};
+	private: bool ProcessBlock(TableLayoutPanel^ tb, int blockRow, int blockCol) {
+		for (int rowOffset = 0; rowOffset < 3; rowOffset++) {
+			for (int colOffset = 0; colOffset < 3; colOffset++) {
+				   int globalRow = blockRow * 3 + rowOffset;
+				   int globalCol = blockCol * 3 + colOffset;
+				   int value = this->generator->copy_board[globalRow, globalCol];
+
+				   if (value != 0) {
+					   UpdateTextBox(tb, rowOffset, colOffset, value);
+					   this->generator->board[globalRow, globalCol] = value;
+					   this->generator->copy_board[globalRow, globalCol] = 0;
+					   return true;
+				   }
+			   }
+		}
+		return false;
+	}
+		  
+	private: void UpdateTextBox(TableLayoutPanel^ tb, int rowOffset, int colOffset, int value) {
+		TextBox^ textBox = dynamic_cast<TextBox^>(tb->GetControlFromPosition(colOffset, rowOffset));
+		if (textBox != nullptr) {
+			textBox->BackColor = BackColor.Orange;
+			textBox->Text = value.ToString();
+			textBox->Enabled = false;
+		}
+	}
+	
+	private: System::Void MainForm_Load(System::Object^ sender, System::EventArgs^ e) {
+	
+	}
+	};
 }
